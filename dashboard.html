@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Delay Prediction - Model Evaluation Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Design System - Professional Dark Theme (Cyan/Gray) */
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --bg-card-hover: #1f1f1f;
+            --border-color: #2a2a2a;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --accent-primary: #06b6d4;
+            --accent-secondary: #0891b2;
+            --accent-success: #22c55e;
+            --accent-warning: #eab308;
+            --accent-error: #ef4444;
+            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
+            --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+            --radius-lg: 8px;
+            --radius-md: 6px;
+            --radius-sm: 4px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: none;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .logo p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: var(--bg-card);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Headers */
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-success);
+        }
+
+        /* Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            background: var(--bg-card-hover);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-card.primary {
+            border-color: var(--accent-primary);
+        }
+
+        .metric-card.success {
+            border-color: var(--accent-success);
+        }
+
+        .metric-card.success::before {
+            background: var(--accent-success);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .metric-icon.primary {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .metric-icon.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--accent-success);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--accent-primary);
+        }
+
+        .metric-description {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Chart Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .chart-card:hover {
+            background: var(--bg-card-hover);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .chart-image {
+            width: 100%;
+            height: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--bg-secondary);
+        }
+
+        .comparison-table th:first-child {
+            border-top-left-radius: var(--radius-md);
+        }
+
+        .comparison-table th:last-child {
+            border-top-right-radius: var(--radius-md);
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .comparison-table td {
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding: 1rem;
+            }
+        }
+
+        /* Utility Classes */
+        .highlight {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .text-gradient {
+            color: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">FD</div>
+                <div>
+                    <h1>Flight Delay Prediction</h1>
+                    <p>Model Evaluation Dashboard</p>
+                </div>
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('overview')">Overview</button>
+                <button class="nav-tab" onclick="showTab('classifier')">Classifier</button>
+                <button class="nav-tab" onclick="showTab('regressor')">Regressor</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="section-header">
+                <h2>
+                    <span class="text-gradient">Model Performance Overview</span>
+                    <span class="badge badge-success">Production Ready</span>
+                </h2>
+                <p>Comprehensive evaluation of both classification and regression models trained on 5 years of synthetic Indian airline operations data.</p>
+            </div>
+
+            <!-- Key Metrics Summary -->
+            <div class="metrics-grid">
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <span class="metric-label">Classifier Accuracy</span>
+                        <div class="metric-icon primary">CLF</div>
+                    </div>
+                    <div class="metric-value">83.6%</div>
+                    <div class="metric-description">Binary classification for delays >15min</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <span class="metric-label">Brier Score</span>
+                        <div class="metric-icon success">BRI</div>
+                    </div>
+                    <div class="metric-value">0.919</div>
+                    <div class="metric-description">Excellent discriminative ability</div>
+                </div>
+
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <span class="metric-label">Regressor R² Score</span>
+                        <div class="metric-icon primary">R2</div>
+                    </div>
+                    <div class="metric-value">0.632</div>
+                    <div class="metric-description">Variance explained for delay duration</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <span class="metric-label">MAPE</span>
+                        <div class="metric-icon success">%</div>
+                    </div>
+                    <div class="metric-value">10.7%</div>
+                    <div class="metric-description">Mean absolute percentage error</div>
+                </div>
+            </div>
+
+            <!-- Model Comparison Table -->
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <h3 class="chart-title">Model Comparison</h3>
+                    <span class="chart-badge">Summary</span>
+                </div>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Type</th>
+                            <th>Primary Metric</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>XGBClassifier</strong></td>
+                            <td>Binary Classification</td>
+                            <td>Accuracy / ROC-AUC</td>
+                            <td class="highlight">83.6% / 0.919</td>
+                            <td><span class="badge badge-success">Good</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>XGBRegressor</strong></td>
+                            <td>Regression</td>
+                            <td>R² / MAE</td>
+                            <td class="highlight">0.632 / 2.32min</td>
+                            <td><span class="badge badge-success">Good</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Quick Insights -->
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <h3 class="chart-title">Key Insights</h3>
+                    <span class="chart-badge">Analysis</span>
+                </div>
+                <div style="color: var(--text-secondary); line-height: 2;">
+                    <p>• <strong class="highlight">Classifier Performance:</strong> The XGBClassifier achieves strong performance with 83.6% accuracy and 0.919 ROC-AUC, indicating excellent ability to distinguish between delayed and on-time flights.</p>
+                    <p>• <strong class="highlight">Regressor Performance:</strong> The XGBRegressor explains 63.2% of variance in delay duration with an average error of 2.32 minutes.</p>
+                    <p>• <strong class="highlight">Top Features:</strong> Airport traffic, storm conditions, and precipitation are the strongest predictors of flight delays.</p>
+                    <p>• <strong class="highlight">Model Calibration:</strong> The classifier shows good calibration with a Brier score of 0.113, indicating reliable probability estimates.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classifier Tab -->
+        <div id="classifier" class="tab-content">
+            <div class="section-header">
+                <h2>
+                    <span class="text-gradient">Delay Classifier</span>
+                    <span class="badge badge-success">XGBoost</span>
+                </h2>
+                <p>Binary classification model predicting whether a flight will be delayed by more than 15 minutes.</p>
+            </div>
+
+            <!-- Classifier Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <span class="metric-label">Accuracy</span>
+                        <div class="metric-icon primary">ACC</div>
+                    </div>
+                    <div class="metric-value">83.6%</div>
+                    <div class="metric-description">Overall correct predictions</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <span class="metric-label">ROC AUC</span>
+                        <div class="metric-icon success">AUC</div>
+                    </div>
+                    <div class="metric-value">0.919</div>
+                    <div class="metric-description">Area under ROC curve</div>
+                </div>
+
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <span class="metric-label">Avg Precision</span>
+                        <div class="metric-icon primary">PRC</div>
+                    </div>
+                    <div class="metric-value">0.945</div>
+                    <div class="metric-description">Precision-Recall AUC</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <span class="metric-label">MAPE</span>
+                        <div class="metric-icon success">MAPE</div>
+                    </div>
+                    <div class="metric-value">0.113</div>
+                    <div class="metric-description">Calibration quality</div>
+                </div>
+            </div>
+
+            <!-- Per-Class Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Precision (No Delay)</span>
+                        <div class="metric-icon primary">PR0</div>
+                    </div>
+                    <div class="metric-value">80.3%</div>
+                    <div class="metric-description">Of predicted non-delays, 80.3% correct</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Recall (No Delay)</span>
+                        <div class="metric-icon success">REC</div>
+                    </div>
+                    <div class="metric-value">78.9%</div>
+                    <div class="metric-description">Of actual non-delays, 78.9% identified</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Precision (Delay)</span>
+                        <div class="metric-icon primary">PR1</div>
+                    </div>
+                    <div class="metric-value">85.8%</div>
+                    <div class="metric-description">Of predicted delays, 85.8% correct</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Recall (Delay)</span>
+                        <div class="metric-icon success">REC</div>
+                    </div>
+                    <div class="metric-value">86.7%</div>
+                    <div class="metric-description">Of actual delays, 86.7% identified</div>
+                </div>
+            </div>
+
+            <!-- Classifier Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Confusion Matrix</h3>
+                        <span class="chart-badge">Classification</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/confusion_matrix.png" alt="Confusion Matrix">
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">ROC Curve</h3>
+                        <span class="chart-badge">Performance</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/roc_curve.png" alt="ROC Curve">
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Precision-Recall Curve</h3>
+                        <span class="chart-badge">Imbalanced Data</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/pr_curve.png" alt="Precision-Recall Curve">
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Calibration Curve</h3>
+                        <span class="chart-badge">Probability</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/calibration_curve.png" alt="Calibration Curve">
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Feature Importance</h3>
+                        <span class="chart-badge">XGBoost</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/feature_importance.png" alt="Feature Importance">
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Learning Curves</h3>
+                        <span class="chart-badge">Validation</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/learning_curves.png" alt="Learning Curves">
+                </div>
+            </div>
+        </div>
+
+        <!-- Regressor Tab -->
+        <div id="regressor" class="tab-content">
+            <div class="section-header">
+                <h2>
+                    <span class="text-gradient">Delay Regressor</span>
+                    <span class="badge badge-success">XGBoost</span>
+                </h2>
+                <p>Regression model predicting the actual delay duration in minutes for flights predicted to be delayed.</p>
+            </div>
+
+            <!-- Regressor Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <span class="metric-label">R² Score</span>
+                        <div class="metric-icon primary">R2</div>
+                    </div>
+                    <div class="metric-value">0.632</div>
+                    <div class="metric-description">Variance explained (63.2%)</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <span class="metric-label">RMSE</span>
+                        <div class="metric-icon success">RMSE</div>
+                    </div>
+                    <div class="metric-value">3.01</div>
+                    <div class="metric-description">Root mean squared error (minutes)</div>
+                </div>
+
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <span class="metric-label">MAE</span>
+                        <div class="metric-icon primary">MAE</div>
+                    </div>
+                    <div class="metric-value">2.32</div>
+                    <div class="metric-description">Mean absolute error (minutes)</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <span class="metric-label">MAPE</span>
+                        <div class="metric-icon success">%</div>
+                    </div>
+                    <div class="metric-value">10.7%</div>
+                    <div class="metric-description">Mean absolute % error</div>
+                </div>
+            </div>
+
+            <!-- Regressor Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Actual vs Predicted</h3>
+                        <span class="chart-badge">Regression</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/actual_vs_predicted.png" alt="Actual vs Predicted">
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Residuals Analysis</h3>
+                        <span class="chart-badge">Distribution</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/residuals.png" alt="Residuals Analysis">
+                </div>
+
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Feature Importance</h3>
+                        <span class="chart-badge">XGBoost</span>
+                    </div>
+                    <img class="chart-image" src="evaluation/regressor_feature_importance.png" alt="Regressor Feature Importance">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Flight Delay Prediction Project | Machine Learning Portfolio | Generated with comprehensive evaluation metrics</p>
+    </footer>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
